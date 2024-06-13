@@ -16,6 +16,7 @@ body {
   -o-background-size: cover;
   background-size: cover;
 }
+
 .container{
   display: flex;
   flex-direction: column;
@@ -45,7 +46,7 @@ nav {
   align-items: center;
 }
 .image img {
-  width: 250px;
+  width: 320px;
 }
 section {
   display: flex;
