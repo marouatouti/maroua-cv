@@ -24,9 +24,9 @@ var vertexShaderSrc = `
 attribute vec2 position;
 
 void main() {
-// position specifies only x and y.
-// We set z to be 0.0, and w to be 1.0
-gl_Position = vec4(position, 0.0, 1.0);
+  // position specifies only x and y.
+  // We set z to be 0.0, and w to be 1.0
+  gl_Position = vec4(position, 0.0, 1.0);
 }
 `;
 
@@ -38,28 +38,27 @@ const float HEIGHT = ` + (height >> 0) + `.0;
 
 uniform vec3 metaballs[` + numMetaballs + `];
 
-void main(){
-float x = gl_FragCoord.x;
-float y = gl_FragCoord.y;
+void main() {
+  float x = gl_FragCoord.x;
+  float y = gl_FragCoord.y;
 
-float sum = 0.0;
-for (int i = 0; i < ` + numMetaballs + `; i++) {
-vec3 metaball = metaballs[i];
-float dx = metaball.x - x;
-float dy = metaball.y - y;
-float radius = metaball.z;
+  float sum = 0.0;
+  for (int i = 0; i < ` + numMetaballs + `; i++) {
+    vec3 metaball = metaballs[i];
+    float dx = metaball.x - x;
+    float dy = metaball.y - y;
+    float radius = metaball.z;
 
-sum += (radius * radius) / (dx * dx + dy * dy);
+    sum += (radius * radius) / (dx * dx + dy * dy);
+  }
+
+  if (sum >= 0.99) {
+    gl_FragColor = vec4(mix(vec3(x / WIDTH, y / HEIGHT, 1.0), vec3(0, 0, 0), max(0.0, 1.0 - (sum - 0.99) * 100.0)), 1.0);
+    return;
+  }
+
+  gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
 }
-
-if (sum >= 0.99) {
-gl_FragColor = vec4(mix(vec3(x / WIDTH, y / HEIGHT, 1.0), vec3(0, 0, 0), max(0.0, 1.0 - (sum - 0.99) * 100.0)), 1.0);
-return;
-}
-
-gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-}
-
 `;
 
 var vertexShader = compileShader(vertexShaderSrc, gl.VERTEX_SHADER);
@@ -151,4 +150,22 @@ function getAttribLocation(program, name) {
 canvas.onmousemove = function(e) {
   mouse.x = e.clientX;
   mouse.y = e.clientY;
+}
+
+// Handle device orientation events
+if (window.DeviceOrientationEvent) {
+  window.addEventListener('deviceorientation', function(event) {
+    var alpha = event.alpha; // Rotation around z-axis (0 to 360 degrees)
+    var beta = event.beta;   // Tilt front-to-back (-180 to 180 degrees)
+    var gamma = event.gamma; // Tilt left-to-right (-90 to 90 degrees)
+    
+    var maxTilt = 45; // Maximum tilt angle we want to respond to
+    var factor = 5; // How much the tilt affects the movement
+
+    for (var i = 0; i < numMetaballs; i++) {
+      var metaball = metaballs[i];
+      metaball.vx += (gamma / maxTilt) * factor;
+      metaball.vy += (beta / maxTilt) * factor;
+    }
+  }, true);
 }
